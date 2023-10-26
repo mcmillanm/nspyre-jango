@@ -10,6 +10,7 @@ from pyqtgraph import SpinBox
 from pyqtgraph.Qt import QtWidgets
 
 import template.experiments.odmr
+import template.experiments.aom_test
 
 class ODMRWidget(ExperimentWidget):
     def __init__(self):
@@ -53,6 +54,73 @@ class ODMRWidget(ExperimentWidget):
                         'SpinMeasurements',
                         'odmr_sweep',
                         title='ODMR')
+
+class AOMWidget(ExperimentWidget):
+    def __init__(self):
+        params_config = {'dataset': {'display_text': 'Data Set', 'widget': QtWidgets.QLineEdit('test'),
+                                     
+            },    
+            't_i': {
+                'display_text': 'Start Time (ns)',
+                'widget': SpinBox(
+                    value=1,
+                    suffix='',
+                    siPrefix=True,
+                    bounds=(8, 5e9),
+                    dec=True,
+                ),
+            },
+            't_f': {
+                'display_text': 'Stop Time (ns)',
+                'widget': SpinBox(
+                    value=2,
+                    suffix='',
+                    siPrefix=True,
+                    bounds=(9, 6e9),
+                    dec=True,
+                ),
+            },
+            'num_points': {
+                'display_text': 'Number of Scan Points',
+                'widget': SpinBox(value=10, int=True, bounds=(1, None), dec=True),
+            },
+            'iterations': {
+                'display_text': 'Number of Experiment Repeats',
+                'widget': SpinBox(value=10, int=True, bounds=(1, None), dec=True),
+            },}
+        super().__init__(params_config, template.experiments.AOM, 'AOMPulse', 'AOM_pulse', title='AOM Pulse')
+
+class ResV1LaserWidget(ExperimentWidget):
+    def __init__(self):
+        params_config = {'dataset': {'display_text': 'Data Set', 'widget': QtWidgets.QLineEdit('test'),
+        },
+            'wavelength': {
+                'display_text': 'Wavelength (nm)',
+                'widget': SpinBox(
+                    value=1230,
+                    suffix='',
+                    siPrefix=True,
+                    bounds=(1230, 1360),
+                    dec=True,
+                ),
+            },}
+        super().__init__(params_config, template.experiments.ResLaser, 'ResonantV1Laser', 'ResonantV1_Laser', title='Resonant Laser (V1)')
+
+class SigGenWidget(ExperimentWidget):
+    def __init__(self):
+        params_config = {
+            'frequency': {
+                'display_text': 'Frequency (GHz)',
+                'widget': SpinBox(
+                    value=1,
+                    suffix='',
+                    siPrefix=True,
+                    bounds=(1, 18),
+                    dec=True,
+                ),
+            },}
+        super().__init__(params_config, template.experiments.SigGen, 'FrequncyGen', 'Frequency_Gen', title='Signal Generator')
+
 
 def process_ODMR_data(sink: DataSink):
     """Subtract the signal from background trace and add it as a new 'diff' dataset."""

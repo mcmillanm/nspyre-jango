@@ -39,7 +39,9 @@ def main():
         # Create the GUI.
         main_widget = MainWidget(
             {
-                'ODMR': MainWidgetItem(template.gui.elements, 'ODMRWidget', stretch=(1, 1)),
+                'ODMR': MainWidgetItem(template.gui.elements, 'ODMRWidget', stretch=(1, 1)), 'AOM Pulse': MainWidgetItem(template.gui.elements, 'AOMWidget', stretch=(1, 1)),
+                'Resonant Laser (V1)': MainWidgetItem(template.gui.elements, 'ResV1LaserWidget', stretch=(1, 1)),
+                'Signal Generator': MainWidgetItem(template.gui.elements, 'SigGenWidget', stretch=(1, 1)),
                 'Subsystems': MainWidgetItem(nspyre.gui.widgets.subsystem, 'SubsystemsWidget', args=[insmgr.subs.subsystems], stretch=(1, 1)),
                 'Plots': {
                     'FlexLinePlotDemo': MainWidgetItem(

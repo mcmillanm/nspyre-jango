@@ -28,6 +28,8 @@ with InstrumentServer() as local_inserv, InstrumentGateway(port=42067) as remote
     local_inserv.add('daq', _HERE / 'nspyre_drivers' / 'ni' / 'daq.py', 'DAQ')
     local_inserv.add('odmr_driver', _HERE / 'fake_odmr_driver.py', 'FakeODMRInstrument')
     local_inserv.add('swabian', _HERE / 'nspyre_drivers' / 'swabian' / 'SwabianPS82.py', 'SwabianPulseStreamer82')
+    local_inserv.add('e8527d', _HERE / 'nspyre_drivers' / 'agilent' / 'e8257d.py', 'AgilentE8257D')
+    #local_inserv.add('tlb6725', _HERE / 'nspyre_drivers' / 'newfocus' / 'tlb6725.py', 'TLB6725')
     # run a CLI (command-line interface) that allows the user to enter
     # commands to control the server
     serve_instrument_server_cli(local_inserv)

@@ -14,6 +14,7 @@ import pulsestreamer # you can download the packages using pip, see swabian 8/2 
 from pulsestreamer import *
 
 from template.drivers.insmgr import MyInstrumentManager
+#from template.drivers.nspyre_drivers.newfocus.tlb6725 import TLB6725 as NF
 
 _HERE = Path(__file__).parent
 _logger = logging.getLogger(__name__)
@@ -51,7 +52,7 @@ class ResonantV1Laser:
         """Perform experiment teardown."""
         _logger.info('Destroyed SpinMeasurements instance.')
 
-    def ResonantV1_Laser(self, dataset: str, wavelength: float):
+    def ResonantV1_Laser(self, wavelength: float):
         print(0)
         """Args:
             dataset: name of the dataset to push data to
@@ -71,4 +72,4 @@ class ResonantV1Laser:
                     
 if __name__ == '__main__':
     exp = ResonantV1Laser()
-    exp.ResonantV1_Laser('test')
+    exp.ResonantV1_Laser()

@@ -11,6 +11,10 @@ from nspyre import experiment_widget_process_queue
 from nspyre import StreamingList
 from nspyre import nspyre_init_logger
 
+from template.drivers.nspyre_drivers.agilent.e8257d import AgilentE8257D as AGD
+from template.drivers.nspyre_drivers.ni.ni_photonCounting import NIDAQ as DAQ
+import pulsestreamer as PS
+
 from template.drivers.insmgr import MyInstrumentManager
 
 _HERE = Path(__file__).parent
@@ -53,8 +57,10 @@ class SpinMeasurements:
         dataset: str,
         start_freq: float,
         stop_freq: float,
+        power: float,
         num_points: int,
-        iterations: int
+        iterations: int,
+        period: int
     ):
         """Run a fake ODMR (optically detected magnetic resonance)
         PL (photoluminescence) sweep over a set of microwave frequencies.
@@ -69,22 +75,36 @@ class SpinMeasurements:
         # connect to the instrument server
         # connect to the data server and create a data set, or connect to an
         # existing one with the same name if it was created earlier.
+
+        SG = AGD.SG_Connect()
+        AGD.idn(AGD)
+
         with MyInstrumentManager() as mgr, DataSource(dataset) as odmr_data:
+            
             odmr_driver = mgr.odmr_driver
+            ps = PS.PulseStreamer("169.254.8.2")
+            clk_sequence = ps.createSequence()
+            patt_d_ch0 = [(100, 1), (100, 0)]
+
             # set the signal generator amplitude for the scan (dBm).
-            odmr_driver.set_amplitude(6.5)
-            odmr_driver.set_output_en(True)
+
+            AGD.set_rf_amplitude(AGD, power)
 
             # frequencies that will be swept over in the ODMR measurement
+
             frequencies = np.linspace(start_freq, stop_freq, num_points)
 
             # for storing the experiment data
             # list of numpy arrays of shape (2, num_points)
+
             signal_sweeps = StreamingList()
             background_sweeps = StreamingList()
+
             for i in range(iterations):
+
                 # photon counts corresponding to each frequency
                 # initialize to NaN
+
                 sig_counts = np.empty(num_points)
                 sig_counts[:] = np.nan
                 signal_sweeps.append(np.stack([frequencies/1e9, sig_counts]))
@@ -93,27 +113,47 @@ class SpinMeasurements:
                 background_sweeps.append(np.stack([frequencies/1e9, bg_counts]))
 
                 # sweep counts vs. frequency.
+
                 for f, freq in enumerate(frequencies):
+
                     # access the signal generator driver on the instrument server and set its frequency.
-                    odmr_driver.set_frequency(freq)
+                    
+                    AGD.set_rf_frequency(AGD, freq)
+                    AGD.set_rf_toggle(AGD, 'ON')
+                    
                     # read the number of photon counts received by the photon counter.
-                    signal_sweeps[-1][1][f] = odmr_driver.cnts(0.005)
+                    
+                    '''Add DAQ counts, not odmr_driver.counts(0.005)'''
+                    clk_sequence.setDigital(0, patt_d_ch0)
+                    ps.stream(clk_sequence, PS.PulseStreamer.REPEAT_INFINITELY)
+
+                    print(signal_sweeps[-1][1])
+                    print(DAQ.read_ctrs_ext_clk(DAQ, period, 2)[0])
+                    signal_sweeps[-1][1][f] = DAQ.read_ctrs_ext_clk(DAQ, period, 5)[0][0]
+                    
                     # notify the streaminglist that this entry has updated so it will be pushed to the data server
+                    
                     signal_sweeps.updated_item(-1)
 
-                    # set the signal generator off-resonance to mimic a background noise signal
-                    odmr_driver.set_frequency(100e3)
-                    background_sweeps[-1][1][f] = odmr_driver.cnts(0.005)
+                    # set the signal generator off for a background noise signal
+                    
+                    AGD.set_rf_toggle(AGD, 'OFF')
+                    '''Add DAQ counts, not odmr_driver.counts(0.005)'''
+                    background_sweeps[-1][1][f] = DAQ.read_ctrs_ext_clk(DAQ, period, 2)
                     background_sweeps.updated_item(-1)
 
+                    
                     # save the current data to the data server.
-                    odmr_data.push({'params': {'start': start_freq, 'stop': stop_freq, 'num_points': num_points, 'iterations': iterations},
+                    odmr_data.push({'params': {'start': start_freq, 'stop': stop_freq, 'power': power, 'num_points': num_points, 'iterations': iterations},
                                     'title': 'Optically Detected Magnetic Resonance',
                                     'xlabel': 'Frequency (GHz)',
                                     'ylabel': 'Counts',
                                     'datasets': {'signal' : signal_sweeps,
                                                 'background': background_sweeps}
                     })
+
+                    AGD.get_rf_toggle(AGD)
+
                     if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                         # the GUI has asked us nicely to exit
                         return
@@ -121,3 +161,4 @@ class SpinMeasurements:
 if __name__ == '__main__':
     exp = SpinMeasurements()
     exp.odmr_sweep('odmr', 3e9, 4e9, 101, 50)
+    #exp.odmr_sweep('odmr', 3e9, 4e9, 101, 50)

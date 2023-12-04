@@ -10,7 +10,10 @@ from pyqtgraph import SpinBox
 from pyqtgraph.Qt import QtWidgets
 
 import template.experiments.odmr
-import template.experiments.aom_test
+import template.experiments.AOM
+import template.experiments.SigGen
+import template.experiments.ResLaser
+
 
 class ODMRWidget(ExperimentWidget):
     def __init__(self):
@@ -35,6 +38,16 @@ class ODMRWidget(ExperimentWidget):
                     dec=True,
                 ),
             },
+            'power': {
+                'display_text': 'Power',
+                'widget': SpinBox(
+                    value=1,
+                    suffix='dBm',
+                    siPrefix=True,
+                    bounds=(0.5, 3.0),
+                    dec=True,
+                ),
+            },
             'num_points': {
                 'display_text': 'Number of Scan Points',
                 'widget': SpinBox(value=101, int=True, bounds=(1, None), dec=True),
@@ -42,6 +55,10 @@ class ODMRWidget(ExperimentWidget):
             'iterations': {
                 'display_text': 'Number of Experiment Repeats',
                 'widget': SpinBox(value=50, int=True, bounds=(1, None), dec=True),
+            },
+            'period': {
+                'display_text': 'Collection Time',
+                'widget': SpinBox(value=0.1, int=False, bounds=(0.1, None), dec=True),
             },
             'dataset': {
                 'display_text': 'Data Set',
@@ -66,7 +83,7 @@ class AOMWidget(ExperimentWidget):
                     value=1,
                     suffix='',
                     siPrefix=True,
-                    bounds=(8, 5e9),
+                    bounds=(20e6, 5e9),
                     dec=True,
                 ),
             },
@@ -76,25 +93,23 @@ class AOMWidget(ExperimentWidget):
                     value=2,
                     suffix='',
                     siPrefix=True,
-                    bounds=(9, 6e9),
+                    bounds=(30e6, 6e9),
                     dec=True,
                 ),
             },
             'num_points': {
                 'display_text': 'Number of Scan Points',
-                'widget': SpinBox(value=10, int=True, bounds=(1, None), dec=True),
+                'widget': SpinBox(value=100, int=True, bounds=(1, None), dec=True),
             },
             'iterations': {
                 'display_text': 'Number of Experiment Repeats',
-                'widget': SpinBox(value=10, int=True, bounds=(1, None), dec=True),
+                'widget': SpinBox(value=1, int=True, bounds=(1, None), dec=True),
             },}
         super().__init__(params_config, template.experiments.AOM, 'AOMPulse', 'AOM_pulse', title='AOM Pulse')
 
 class ResV1LaserWidget(ExperimentWidget):
     def __init__(self):
-        params_config = {'dataset': {'display_text': 'Data Set', 'widget': QtWidgets.QLineEdit('test'),
-        },
-            'wavelength': {
+        params_config = {'wavelength': {
                 'display_text': 'Wavelength (nm)',
                 'widget': SpinBox(
                     value=1230,
@@ -109,8 +124,8 @@ class ResV1LaserWidget(ExperimentWidget):
 class SigGenWidget(ExperimentWidget):
     def __init__(self):
         params_config = {
-            'frequency': {
-                'display_text': 'Frequency (GHz)',
+            'RFfrequency': {
+                'display_text': 'RF Frequency (GHz)',
                 'widget': SpinBox(
                     value=1,
                     suffix='',
@@ -118,8 +133,18 @@ class SigGenWidget(ExperimentWidget):
                     bounds=(1, 18),
                     dec=True,
                 ),
+            },
+            'RFAmp': {
+                'display_text': 'RF Amplitude (dBm)',
+                'widget': SpinBox(
+                    value=1,
+                    suffix='',
+                    siPrefix=True,
+                    bounds=(1, 17),
+                    dec=True,
+                ),
             },}
-        super().__init__(params_config, template.experiments.SigGen, 'FrequncyGen', 'Frequency_Gen', title='Signal Generator')
+        super().__init__(params_config, template.experiments.SigGen, 'FrequencyGen', 'Frequency_Gen', title='Signal Generator')
 
 
 def process_ODMR_data(sink: DataSink):
